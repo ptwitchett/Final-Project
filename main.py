@@ -4,14 +4,14 @@ import json
 from dotenv import load_dotenv
 import os
 
-# Load environment variables
+#load environment variables
 load_dotenv()
 
-# Get client ID and client secret from environment variables
+#get client ID and client secret from environment variables
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 
-# Function to get access token from Spotify API
+#function to get access token from Spotify API
 def get_token():
     auth_string = f"{CLIENT_ID}:{CLIENT_SECRET}"
     auth_bytes = auth_string.encode("utf-8")
@@ -26,7 +26,7 @@ def get_token():
     token = response.json().get("access_token")
     return token
 
-# Function to search for track and return track names and IDs
+#function to search for track and return track names and IDs
 def search_for_track(token, track_name):
     headers = {
         "Authorization": f"Bearer {token}"
@@ -48,7 +48,7 @@ def search_for_track(token, track_name):
         track_info_list.append(track_info)
     return track_info_list
 
-# Function to get audio features for a list of track IDs
+#function to get audio features for a list of track IDs
 def get_audio_features(token, track_ids):
     headers = {
         "Authorization": f"Bearer {token}"
@@ -60,7 +60,6 @@ def get_audio_features(token, track_ids):
     audio_features = response.json().get("audio_features")
     return audio_features
 
-# Function to get audio features for multiple tracks
 def get_audio_features_for_tracks(token, track_ids):
     # Call get_audio_features function for each track ID and aggregate the results
     all_audio_features = []
