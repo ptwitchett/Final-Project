@@ -10,6 +10,7 @@ app = Flask(__name__)
 
 #empty list to store track information
 track_info_list = []
+track_features_list = []
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -58,6 +59,9 @@ def index():
 
 @app.route('/get_audio_features', methods=['POST'])
 def get_audio_features():
+
+    global track_features_list
+
     #get the access token
     token = get_token()
     
@@ -66,39 +70,48 @@ def get_audio_features():
     
     #get audio features for all track IDs
     audio_features = get_audio_features_for_tracks(token, track_ids)
-    
+    print (audio_features)
+
+    # Store the audio features
+    track_features_list = audio_features
+
     #calculate the average of certain audio features
-    if audio_features:
+    
         #choose audio features you want to calculate the average for
-        features_to_average = ['danceability', 'energy', 'valence', 'loudness', 'tempo', 'instrumentalness']
+    features_to_display = ['danceability', 'energy', 'valence', 'loudness', 'tempo', 'instrumentalness','key','duration_ms','liveness','mode']
         
-        #initialize dictionary to store sum of feature values
-        feature_sum = {feature: 0.0 for feature in features_to_average}
+    #initialize dictionary to store sum of feature values
+    #feature_sum = {feature: 0.0 for feature in features_to_average}
         
         #sum the feature values for all tracks
-        for track_features in audio_features:
-            for feature in features_to_average:
-                feature_sum[feature] += track_features[feature]
+    for track_info, track_features in zip(track_info_list, audio_features):
+        print(f"Track: {track_info['name']} by {track_info['artist']}")
+        for feature in features_to_display:
+            print(f"{feature.capitalize()}: {track_features[feature]}")
+        print()
+    
+    # Redirect back to the main page
+    return redirect(url_for('index'))
         
         #calculate the average for each feature
-        feature_average = {feature: feature_sum[feature] / len(audio_features) for feature in features_to_average}
+    #feature_average = {feature: feature_sum[feature] / len(audio_features) for feature in features_to_average}
         
-        print("Average Audio Features:", feature_average)
+    #print("Average Audio Features:", feature_average)
         
         #plot radar chart for average audio features
-        fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(polar=True))
-        plot_radar_chart(features_to_average, list(feature_average.values()))
+    #fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(polar=True))
+    #plot_radar_chart(features_to_average, list(feature_average.values()))
         
         #convert the plot to base64 string
-        img = io.BytesIO()
-        plt.savefig(img, format='png')
-        img.seek(0)
-        img_base64 = base64.b64encode(img.getvalue()).decode()
+    #img = io.BytesIO()
+    #plt.savefig(img, format='png')
+    #img.seek(0)
+    #img_base64 = base64.b64encode(img.getvalue()).decode()
         
-        plt.close()
+    #plt.close()
         
         # display radar chart in HTML response
-        return render_template('radar_chart.html', radar_chart=img_base64)
+    #return render_template('radar_chart.html', radar_chart=img_base64)
     
     #redirect back to the main page if no audio features are retrieved
     return redirect(url_for('index'))
