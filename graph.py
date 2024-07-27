@@ -1,27 +1,26 @@
-import numpy as np
-import matplotlib.pyplot as plt
+import plotly.express as px
+import json
+import plotly
 
+def create_lowest_std_scatter_plot(normalized_features_df):
+    #find the two features with the lowest standard deviation
+    selected_features = ['danceability', 'energy', 'valence', 'loudness']
+    std_devs = normalized_features_df[selected_features].std()
+    lowest_std_features = std_devs.nsmallest(2).index
 
-# Create a function to plot radar chart
-def plot_radar_chart(feature_names, values, ax=None):
-    if ax is None:
-        ax = plt.subplot(111, polar=True)
-    #adjusts certain values to be  in line with other variables (0-1 scale)
-    values[4] = values[4]/200
-    values[3] = values[3]/-60
-    num_features = len(feature_names)
+    #create scatter plot for these two features
+    scatter_fig = px.scatter(
+        normalized_features_df, x=lowest_std_features[0], y=lowest_std_features[1],
+        labels={lowest_std_features[0]: lowest_std_features[0].capitalize(), lowest_std_features[1]: lowest_std_features[1].capitalize()},
+        title=f'{lowest_std_features[0].capitalize()} vs {lowest_std_features[1].capitalize()}'
+    )
+    #set axis ranges from 0 to 1 for clarity
+    scatter_fig.update_layout(xaxis_range=[0, 1], yaxis_range=[0, 1])  
+    scatter_chart = json.dumps(scatter_fig, cls=plotly.utils.PlotlyJSONEncoder)
 
-    #calculate angle for each axis
-    angles = np.linspace(0, 2 * np.pi, num_features, endpoint=False)
+    return scatter_chart, lowest_std_features[0], lowest_std_features[1]
 
-    #plot data
-    ax.fill(angles, values, color='b', alpha=0.1)
-    ax.plot(angles, values, color='b', linewidth=2, linestyle='solid')
-    
-    ax.set_ylim(0, 1)
-
-    #add feature labels
-    ax.set_xticks(angles)
-    ax.set_xticklabels(feature_names)
-
-    return ax
+def create_release_year_popularity_scatter_plot(df):
+    #create scatter plot for release years vs popularity
+    fig = px.scatter(df, x='release_date', y='popularity', title='Release Year vs Popularity', labels={'release_date': 'Release Year', 'popularity': 'Popularity'})
+    return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)

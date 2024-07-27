@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Visualizer - Audio Features</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            background-color: #d4f0c0; /* Pastel green background */
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            margin-top: 20px;
+        }
+        h1, h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+        .section {
+            background: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 40px;
+        }
+        .btn-primary, .btn-info {
+            background-color: #3498db;
+            border-color: #2980b9;
+        }
+        .btn-primary:hover, .btn-info:hover {
+            background-color: #2980b9;
+            border-color: #1c6ea4;
+        }
+        .toggle-description, .toggle-description-weak {
+            display: none;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="btn btn-primary btn-block">Back to Home</a>
+        <h1>Music Visualizer - Audio Features</h1>
+        <div class="row">
+            <div class="col-md-6 section">
+                <h2>Scatter Plot</h2>
+                <p>This graph shows the two audio features with the strongest correlation between the input songs.</p>
+                <div id="scatter_chart_lowest_std"></div>
+                <button class="btn btn-info" onclick="toggleDescription()">Toggle Description</button>
+                <div class="toggle-description">
+                    <h3>Description of Audio Features</h3>
+                    <p id="feature_description"></p>
+                </div>
+                {% if weak_correlation_messages %}
+                <h2>Weak Correlations</h2>
+                {{ weak_correlation_messages|safe }}
+                <button class="btn btn-info" onclick="toggleWeakCorrelationDescription()">Toggle Weak Correlation Description</button>
+                <div class="toggle-description-weak">
+                    <h3>Description of Weak Correlation Audio Features</h3>
+                    <p id="weak_correlation_description"></p>
+                </div>
+                {% endif %}
+                <h2>Release Year vs Popularity</h2>
+                <div id="scatter_chart_release_popularity"></div>
+            </div>
+            <div class="col-md-6 section">
+                <h2>Audio Feature Statistics</h2>
+                {{ correlation_table|safe }}
+            </div>
+        </div>
+        <div class="section">
+            <h2>Normalized Feature Statistics Across Songs</h2>
+            {{ normalized_statistics|safe }}
+        </div>
+    </div>
+    <script>
+        var scatter_chart_lowest_std = {{ scatter_chart_lowest_std|safe }};
+        Plotly.newPlot('scatter_chart_lowest_std', scatter_chart_lowest_std.data, scatter_chart_lowest_std.layout);
+
+        var scatter_chart_release_popularity = {{ scatter_chart_release_popularity|safe }};
+        Plotly.newPlot('scatter_chart_release_popularity', scatter_chart_release_popularity.data, scatter_chart_release_popularity.layout);
+
+        function toggleDescription() {
+            var descriptionDiv = document.querySelector('.toggle-description');
+            descriptionDiv.style.display = descriptionDiv.style.display === "none" ? "block" : "none";
+        }
+
+        function toggleWeakCorrelationDescription() {
+            var descriptionDiv = document.querySelector('.toggle-description-weak');
+            descriptionDiv.style.display = descriptionDiv.style.display === "none" ? "block" : "none";
+        }
+
+        document.addEventListener('DOMContentLoaded', (event) => {
+            var feature1 = "{{ feature1 }}";
+            var feature2 = "{{ feature2 }}";
+
+            var descriptions = {
+                "danceability": "Danceability describes how suitable a track is for dancing based on a combination of musical elements including tempo, rhythm stability, beat strength, and overall regularity. A value of 0.0 is least danceable and 1.0 is most danceable. Spotify calculates this value using a combination of these musical elements.",
+                "energy": "Energy is a measure from 0.0 to 1.0 and represents a perceptual measure of intensity and activity. Typically, energetic tracks feel fast, loud, and noisy. Spotify calculates this value based on features such as dynamic range, perceived loudness, timbre, and onset rate.",
+                "valence": "Valence is a measure from 0.0 to 1.0 describing the musical positiveness conveyed by a track. Tracks with high valence sound more positive (e.g., happy, cheerful, euphoric), while tracks with low valence sound more negative (e.g., sad, depressed, angry). Spotify calculates this value based on musical elements such as key, mode, melody, harmony, rhythm, and lyrics.",
+                "loudness": "Loudness is a measure from 0.0 to 1.0 that describes how loud or soft a track sounds. Higher values indicate louder sounds, with 1.0 being very loud and 0.0 being very quiet. Spotify calculates this value based on the average loudness of the track in decibels (dB)."
+            };
+
+            var descriptionText = "<strong>" + feature1 + ":</strong> " + descriptions[feature1] + "<br><strong>" + feature2 + ":</strong> " + descriptions[feature2];
+            document.getElementById('feature_description').innerHTML = descriptionText;
+
+            var weakDescriptions = {
+                "danceability": descriptions["danceability"],
+                "energy": descriptions["energy"],
+                "valence": descriptions["valence"],
+                "loudness": descriptions["loudness"]
+            };
+
+            var weakCorrelationText = "";
+            var weakFeatures = {{ weak_features | tojson }};
+            weakFeatures.forEach(function(feature) {
+                weakCorrelationText += "<strong>" + feature + ":</strong> " + weakDescriptions[feature] + "<br>";
+            });
+            document.getElementById('weak_correlation_description').innerHTML = weakCorrelationText;
+        });
+    </script>
+</body>
+</html>

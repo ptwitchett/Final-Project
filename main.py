@@ -34,7 +34,7 @@ def search_for_track(token, track_name):
     params = {
         "q": track_name,
         "type": "track",
-        "limit": 1
+        "limit": 10
     }
     response = requests.get("https://api.spotify.com/v1/search", headers=headers, params=params)
     json_result = response.json().get("tracks", {}).get("items", [])
@@ -43,7 +43,11 @@ def search_for_track(token, track_name):
         track_info = {
             "name": item.get("name"),
             "id": item.get("id"),
-            "artist": ", ".join(artist.get("name") for artist in item.get("artists"))
+            "artist": ", ".join(artist.get("name") for artist in item.get("artists")),
+            "artist_ids": [artist.get("id") for artist in item.get("artists")],  # Store artist IDs
+            "album": item.get("album").get("name"),
+            "release_date": item.get("album").get("release_date"),
+            "popularity": item.get("popularity")
         }
         track_info_list.append(track_info)
     return track_info_list
@@ -61,13 +65,28 @@ def get_audio_features(token, track_ids):
     return audio_features
 
 def get_audio_features_for_tracks(token, track_ids):
-    # Call get_audio_features function for each track ID and aggregate the results
+    #call get_audio_features function for each track ID and combine the results
     all_audio_features = []
     for track_id in track_ids:
         audio_features = get_audio_features(token, [track_id])
         all_audio_features.extend(audio_features)
     return all_audio_features
 
+def get_artist_details(token, artist_ids):
+    headers = {
+        "Authorization": f"Bearer {token}"
+    }
+    params = {
+        "ids": ",".join(artist_ids)
+    }
+    response = requests.get("https://api.spotify.com/v1/artists", headers=headers, params=params)
+    artist_details = response.json().get("artists")
+    return artist_details
+
 if __name__ == "__main__":
     token = get_token()
-
+    track_info = search_for_track(token, "Imagine")
+    artist_ids = list(set(artist_id for track in track_info for artist_id in track['artist_ids']))
+    artist_details = get_artist_details(token, artist_ids)
+    for artist in artist_details:
+        print(artist['name'], artist['genres'])
